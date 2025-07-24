@@ -26,6 +26,15 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="neural-loader"></div>
+            <h2>Initializing Neural Trading System...</h2>
+            <p>Loading M3 Max Neural Engine</p>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
@@ -732,6 +741,151 @@
                             <button id="sendMessage" class="neural-send-btn" disabled>
                                 <i class="fas fa-paper-plane"></i>
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Content Structure -->
+            <div id="dashboardTab" class="tab-content active">
+                <!-- Dashboard content (existing cards) -->
+            </div>
+            
+            <div id="strategiesTab" class="tab-content">
+                <div class="strategies-container">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-robot neural-icon"></i>
+                                Neural Trading Strategies
+                            </h3>
+                            <div class="strategy-controls">
+                                <button class="btn-neural toggle-simulator">Start Simulator</button>
+                                <div class="simulator-status stopped">STOPPED</div>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="strategy-list">
+                                <div class="strategy-item active">
+                                    <div class="strategy-name">Neural AI Ensemble</div>
+                                    <div class="strategy-performance">+47.3% YTD</div>
+                                    <div class="strategy-status">ACTIVE</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="portfolioTab" class="tab-content">
+                <div class="portfolio-container">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-pie neural-icon"></i>
+                                Live Portfolio Tracking
+                            </h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="portfolio-summary">
+                                <div class="portfolio-value">
+                                    <span class="value-amount neural-glow">$100,000.00</span>
+                                    <span class="value-change neutral">$0.00 (0.00%)</span>
+                                </div>
+                            </div>
+                            <div class="positions-list" id="positionsList">
+                                <div class="no-positions">No positions yet. Start the simulator to begin trading.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="analyticsTab" class="tab-content">
+                <div class="analytics-container">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-line neural-icon"></i>
+                                Real-Time Analytics
+                            </h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="analytics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-label">Total Return</div>
+                                    <div class="metric-value neural-glow" id="analyticsReturn">0.00%</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Sharpe Ratio</div>
+                                    <div class="metric-value neural-glow" id="analyticsSharpe">0.00</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Win Rate</div>
+                                    <div class="metric-value neural-glow" id="analyticsWinRate">0%</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Total Trades</div>
+                                    <div class="metric-value neural-glow" id="analyticsTrades">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="settingsTab" class="tab-content">
+                <div class="settings-container">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-cog neural-icon"></i>
+                                System Settings
+                            </h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="settings-grid">
+                                <div class="setting-item">
+                                    <label>Trading Frequency</label>
+                                    <select>
+                                        <option>Every 30 seconds</option>
+                                        <option>Every minute</option>
+                                        <option>Every 5 minutes</option>
+                                    </select>
+                                </div>
+                                <div class="setting-item">
+                                    <label>Risk Level</label>
+                                    <input type="range" min="1" max="10" value="5">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="neuralTab" class="tab-content">
+                <div class="neural-container">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-brain neural-icon"></i>
+                                M3 Max Neural Engine
+                            </h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="neural-status-display">
+                                <div class="status-item">
+                                    <span>Connection Status:</span>
+                                    <span class="llm-status">
+                                        <div class="neural-status-dot offline"></div>
+                                        <span>Disconnected</span>
+                                    </span>
+                                </div>
+                                <div class="status-item">
+                                    <span>Processing Power:</span>
+                                    <span class="neural-glow" id="neuralPower">0 TOPS</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

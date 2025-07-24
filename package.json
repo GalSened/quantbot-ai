@@ -4,6 +4,7 @@
   "description": "World's Most Advanced Neural Trading System - M3 Max Powered",
   "main": "index.html",
   "scripts": {
+    "dev": "npx serve . -p 8000",
     "start": "npx serve . -p 8000",
     "serve": "npx serve .",
     "build": "echo 'Static site - no build required'",
