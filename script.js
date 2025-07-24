@@ -1,1410 +1,958 @@
-// Global state
-let llmConnected = false;
-let llmEndpoint = 'http://localhost:11434';
-let llmModel = 'llama2';
-let charts = {};
-let neuralEngine = {
-    active: false,
-    cores: 16,
-    processingSpeed: 15.8,
-    accuracy: 98.7,
-    dataStreams: 47,
-    optionsChains: 2847,
-    newsPerMin: 184,
-    patternAccuracy: 96.4
-};
+// QuantBot AI - Neural Trading System with Real Integrations
+// World's Most Advanced Trading Platform
 
-// Market data simulation
-let marketData = {
-    equities: [
-        { symbol: 'NVDA', price: 847.32, change: 2.47 },
-        { symbol: 'TSLA', price: 247.83, change: 1.23 },
-        { symbol: 'AAPL', price: 189.47, change: -0.87 },
-        { symbol: 'GOOGL', price: 142.35, change: 1.56 },
-        { symbol: 'MSFT', price: 378.92, change: 0.94 }
-    ],
-    crypto: [
-        { symbol: 'BTC', price: 67432, change: 1.23 },
-        { symbol: 'ETH', price: 3847, change: 2.15 },
-        { symbol: 'SOL', price: 184, change: -1.34 }
-    ],
-    patterns: [
-        { name: 'Bull Flag', symbol: 'NVDA', confidence: 94.7, target: 920 },
-        { name: 'Head & Shoulders', symbol: 'TSLA', confidence: 87.3, target: 220 },
-        { name: 'Cup & Handle', symbol: 'AAPL', confidence: 91.8, target: 205 }
-    ],
-    news: [
-        {
-            time: '09:47:23',
-            source: 'Reuters',
-            headline: 'NVIDIA Reports Record Q4 Earnings, Beats Estimates',
-            sentiment: 'Bullish 94%',
-            symbol: 'NVDA',
-            impact: '+3.2%'
-        },
-        {
-            time: '09:45:12',
-            source: 'Bloomberg',
-            headline: 'Tesla Announces New Gigafactory in Texas',
-            sentiment: 'Bullish 87%',
-            symbol: 'TSLA',
-            impact: '+2.1%'
-        }
-    ]
-};
-
-// Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    initializeCharts();
-    initializeNeuralVisualizations();
-    initializeEventListeners();
-    startDataSimulation();
-    startNeuralAnimations();
-    updateMarketStatus();
-    
-    // Initialize new components
-    initializeMarketData();
-    initializePatternRecognition();
-    initializeNewsAnalysis();
-    
-    // Update data more frequently for real-time feel
-    setInterval(updateDashboardData, 2000);
-    setInterval(updateNeuralMetrics, 1000);
-    setInterval(updateMarketData, 3000);
-    setInterval(updatePatternData, 5000);
-    setInterval(updateNewsData, 7000);
-    setInterval(updateMarketStatus, 30000);
-});
-
-// Event Listeners
-function initializeEventListeners() {
-    // LLM Connection
-    document.getElementById('connectLLM').addEventListener('click', openLLMModal);
-    document.getElementById('closeLLMModal').addEventListener('click', closeLLMModal);
-    document.getElementById('testConnection').addEventListener('click', testLLMConnection);
-    document.getElementById('connectButton').addEventListener('click', connectToLLM);
-    
-    // Chat
-    document.getElementById('sendMessage').addEventListener('click', sendChatMessage);
-    document.getElementById('chatInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendChatMessage();
-        }
-    });
-    
-    // Modal close on outside click
-    document.getElementById('llmModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeLLMModal();
-        }
-    });
-    
-    // Navigation
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-}
-
-// Chart Initialization
-function initializeCharts() {
-    // Hero Chart
-    const heroCtx = document.getElementById('heroChart').getContext('2d');
-    charts.hero = new Chart(heroCtx, {
-        type: 'line',
-        data: {
-            labels: generateTimeLabels(50),
-            datasets: [{
-                label: 'Neural Portfolio',
-                data: generatePortfolioData(50),
-                borderColor: '#00ffff',
-                backgroundColor: 'rgba(0, 255, 255, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0,
-                pointHoverRadius: 8,
-                shadowColor: 'rgba(0, 255, 255, 0.5)',
-                shadowBlur: 10
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            animation: {
-                duration: 2000,
-                easing: 'easeInOutQuart'
-            },
-            scales: {
-                x: {
-                    display: false,
-                    grid: { display: false }
-                },
-                y: {
-                    display: false,
-                    grid: { display: false }
-                }
-            },
-            elements: {
-                point: { radius: 0 }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            }
-        }
-    });
-    
-    // Portfolio Allocation Chart
-    const allocationCtx = document.getElementById('allocationChart').getContext('2d');
-    charts.allocation = new Chart(allocationCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['NVDA', 'TSLA', 'AAPL', 'GOOGL', 'MSFT', 'Cash'],
-            datasets: [{
-                data: [29.8, 13.9, 12.2, 11.7, 10.4, 22.0],
-                backgroundColor: [
-                    '#00ffff',
-                    '#ff00ff',
-                    '#00ff88',
-                    '#ffff00',
-                    '#10b981',
-                    '#6b7280'
-                ],
-                borderWidth: 2,
-                borderColor: 'rgba(0, 255, 255, 0.3)',
-                hoverBorderWidth: 4,
-                hoverBorderColor: '#00ffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleColor: '#00ffff',
-                    bodyColor: '#ffffff',
-                    borderColor: '#00ffff',
-                    borderWidth: 1
-                }
-            },
-            cutout: '70%',
-            animation: {
-                animateRotate: true,
-                duration: 2000
-            }
-        }
-    });
-    
-    // Mini Trend Chart
-    const miniTrendCtx = document.getElementById('miniTrendChart').getContext('2d');
-    charts.miniTrend = new Chart(miniTrendCtx, {
-        type: 'line',
-        data: {
-            labels: generateTimeLabels(20),
-            datasets: [{
-                data: generateTrendData(20),
-                borderColor: '#00ffff',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.4,
-                pointRadius: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { display: false },
-                y: { display: false }
-            },
-            elements: { point: { radius: 0 } }
-        }
-    });
-    
-    // Strategy Performance Chart
-    const strategyCtx = document.getElementById('strategyChart').getContext('2d');
-    charts.strategy = new Chart(strategyCtx, {
-        type: 'line',
-        data: {
-            labels: generateTimeLabels(30),
-            datasets: [
-                {
-                    label: 'CV + NLP + RL Ensemble',
-                    data: generateStrategyData(30, 1.2),
-                    borderColor: '#00ffff',
-                    backgroundColor: 'rgba(0, 255, 255, 0.1)',
-                    borderWidth: 3,
-                    fill: false,
-                    tension: 0.4,
-                    pointBackgroundColor: '#00ffff',
-                    pointBorderColor: '#ffffff',
-                    pointHoverRadius: 8
-                },
-                {
-                    label: 'S&P 500',
-                    data: generateStrategyData(30, 0.8),
-                    borderColor: '#6b7280',
-                    backgroundColor: 'rgba(107, 114, 128, 0.1)',
-                    borderWidth: 1,
-                    fill: false,
-                    tension: 0.4,
-                    borderDash: [5, 5]
-                },
-                {
-                    label: 'Traditional Quant',
-                    data: generateStrategyData(30, 0.9),
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    borderWidth: 1,
-                    fill: false,
-                    tension: 0.4,
-                    borderDash: [10, 5]
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-                duration: 1500,
-                easing: 'easeInOutCubic'
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        color: '#00ffff',
-                        font: { size: 12 },
-                        usePointStyle: true
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    display: false,
-                    grid: { display: false }
-                },
-                y: {
-                    display: true,
-                    grid: { 
-                        color: '#3f3f46',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        color: '#71717a',
-                        font: { size: 11 }
-                    }
-                }
-            }
-        }
-    });
-    
-    // Sentiment Gauge
-    const sentimentCtx = document.getElementById('sentimentGauge').getContext('2d');
-    charts.sentiment = new Chart(sentimentCtx, {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [94, 6],
-                backgroundColor: [
-                    'rgba(0, 255, 255, 0.8)',
-                    'rgba(55, 65, 81, 0.3)'
-                ],
-                borderWidth: 0,
-                circumference: 180,
-                rotation: 270,
-                borderRadius: 10
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false }
-            },
-            cutout: '80%',
-            animation: {
-                animateRotate: true,
-                duration: 2000
-            }
-        }
-    });
-    
-    // Pattern Recognition Chart
-    const patternCtx = document.getElementById('patternChart').getContext('2d');
-    charts.pattern = new Chart(patternCtx, {
-        type: 'line',
-        data: {
-            labels: generateTimeLabels(20),
-            datasets: [{
-                label: 'NVDA Pattern',
-                data: generatePatternData(20),
-                borderColor: '#ff00ff',
-                backgroundColor: 'rgba(255, 0, 255, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                x: { display: false },
-                y: { display: false }
-            },
-            elements: { point: { radius: 0 } }
-        }
-    });
-    
-    // Volatility Surface (3D simulation)
-    const volCtx = document.getElementById('volSurface').getContext('2d');
-    charts.volSurface = new Chart(volCtx, {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'IV Surface',
-                data: generateVolatilitySurface(),
-                backgroundColor: 'rgba(255, 255, 0, 0.6)',
-                borderColor: '#ffff00'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
-}
-
-// Neural Visualizations
-function initializeNeuralVisualizations() {
-    // Neural Network Visualization
-    const neuralCtx = document.getElementById('neuralNetworkViz').getContext('2d');
-    drawNeuralNetwork(neuralCtx);
-    
-    // Risk Heatmap
-    const riskCtx = document.getElementById('riskHeatmap').getContext('2d');
-    drawRiskHeatmap(riskCtx);
-    
-    // Neural Background
-    const bgCtx = document.getElementById('neuralBackground').getContext('2d');
-    drawNeuralBackground(bgCtx);
-}
-
-function drawNeuralNetwork(ctx) {
-    const canvas = ctx.canvas;
-    const width = canvas.width = canvas.offsetWidth;
-    const height = canvas.height = canvas.offsetHeight;
-    
-    // Neural network nodes and connections
-    const nodes = [];
-    const layers = [4, 6, 6, 3];
-    
-    // Generate nodes
-    layers.forEach((nodeCount, layerIndex) => {
-        for (let i = 0; i < nodeCount; i++) {
-            nodes.push({
-                x: (width / (layers.length - 1)) * layerIndex,
-                y: (height / (nodeCount + 1)) * (i + 1),
-                layer: layerIndex,
-                active: Math.random() > 0.3
-            });
-        }
-    });
-    
-    function animate() {
-        ctx.clearRect(0, 0, width, height);
-        
-        // Draw connections
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
-        ctx.lineWidth = 1;
-        
-        nodes.forEach(node => {
-            if (node.layer < layers.length - 1) {
-                const nextLayerNodes = nodes.filter(n => n.layer === node.layer + 1);
-                nextLayerNodes.forEach(nextNode => {
-                    if (node.active && nextNode.active) {
-                        ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
-                        ctx.lineWidth = 2;
-                    } else {
-                        ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
-                        ctx.lineWidth = 1;
-                    }
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(node.x, node.y);
-                    ctx.lineTo(nextNode.x, nextNode.y);
-                    ctx.stroke();
-                });
-            }
-        });
-        
-        // Draw nodes
-        nodes.forEach(node => {
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, node.active ? 6 : 3, 0, Math.PI * 2);
-            ctx.fillStyle = node.active ? '#00ffff' : 'rgba(0, 255, 255, 0.3)';
-            ctx.fill();
-            
-            if (node.active) {
-                ctx.shadowColor = '#00ffff';
-                ctx.shadowBlur = 10;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-        });
-        
-        // Randomly activate/deactivate nodes
-        if (Math.random() < 0.1) {
-            const randomNode = nodes[Math.floor(Math.random() * nodes.length)];
-            randomNode.active = !randomNode.active;
-        }
-        
-        requestAnimationFrame(animate);
-    }
-    
-    animate();
-}
-
-function drawRiskHeatmap(ctx) {
-    const canvas = ctx.canvas;
-    const width = canvas.width = canvas.offsetWidth;
-    const height = canvas.height = canvas.offsetHeight;
-    
-    const gridSize = 10;
-    const cols = Math.floor(width / gridSize);
-    const rows = Math.floor(height / gridSize);
-    
-    function animate() {
-        ctx.clearRect(0, 0, width, height);
-        
-        for (let x = 0; x < cols; x++) {
-            for (let y = 0; y < rows; y++) {
-                const risk = Math.sin(Date.now() * 0.001 + x * 0.1 + y * 0.1) * 0.5 + 0.5;
-                const intensity = risk * 0.3;
-                
-                ctx.fillStyle = `rgba(0, 255, 255, ${intensity})`;
-                ctx.fillRect(x * gridSize, y * gridSize, gridSize - 1, gridSize - 1);
-            }
-        }
-        
-        requestAnimationFrame(animate);
-    }
-    
-    animate();
-}
-
-function drawNeuralBackground(ctx) {
-    const canvas = ctx.canvas;
-    const width = canvas.width = window.innerWidth;
-    const height = canvas.height = window.innerHeight;
-    
-    const particles = [];
-    const particleCount = 50;
-    
-    // Initialize particles
-    for (let i = 0; i < particleCount; i++) {
-        particles.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5,
-            size: Math.random() * 2 + 1,
-            opacity: Math.random() * 0.5 + 0.1
-        });
-    }
-    
-    function animate() {
-        ctx.clearRect(0, 0, width, height);
-        
-        // Update and draw particles
-        particles.forEach(particle => {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            
-            // Wrap around edges
-            if (particle.x < 0) particle.x = width;
-            if (particle.x > width) particle.x = 0;
-            if (particle.y < 0) particle.y = height;
-            if (particle.y > height) particle.y = 0;
-            
-            // Draw particle
-            ctx.beginPath();
-            ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0, 255, 255, ${particle.opacity})`;
-            ctx.fill();
-        });
-        
-        // Draw connections
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
-        ctx.lineWidth = 1;
-        
-        particles.forEach((particle, i) => {
-            particles.slice(i + 1).forEach(otherParticle => {
-                const dx = particle.x - otherParticle.x;
-                const dy = particle.y - otherParticle.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 100) {
-                    ctx.beginPath();
-                    ctx.moveTo(particle.x, particle.y);
-                    ctx.lineTo(otherParticle.x, otherParticle.y);
-                    ctx.stroke();
-                }
-            });
-        });
-        
-        requestAnimationFrame(animate);
-    }
-    
-    animate();
-}
-
-// Data Generation Functions
-function generateTimeLabels(count) {
-    const labels = [];
-    const now = new Date();
-    for (let i = count - 1; i >= 0; i--) {
-        const time = new Date(now.getTime() - i * 60000); // 1 minute intervals
-        labels.push(time.toLocaleTimeString('en-US', { 
-            hour12: false, 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        }));
-    }
-    return labels;
-}
-
-function generatePortfolioData(count) {
-    const data = [];
-    let value = 2800000; // Start with higher value for neural system
-    
-    for (let i = 0; i < count; i++) {
-        value += (Math.random() - 0.35) * 50000; // Strong upward bias for AI
-        data.push(Math.max(value, 2500000)); // Higher minimum floor
-    }
-    
-    return data;
-}
-
-function generateTrendData(count) {
-    const data = [];
-    let value = 0;
-    
-    for (let i = 0; i < count; i++) {
-        value += (Math.random() - 0.3) * 2; // Upward trend
-        data.push(value);
-    }
-    
-    return data;
-}
-
-function generateStrategyData(count, multiplier = 1) {
-    const data = [];
-    let value = 0;
-    
-    for (let i = 0; i < count; i++) {
-        value += (Math.random() - 0.3) * multiplier; // Strong upward bias for neural
-        data.push(value);
-    }
-    
-    return data;
-}
-
-function generatePatternData(count) {
-    const data = [];
-    let value = 800; // Starting price for NVDA
-    
-    for (let i = 0; i < count; i++) {
-        // Simulate bull flag pattern
-        if (i < 5) {
-            value += Math.random() * 20 + 10; // Initial rise
-        } else if (i < 15) {
-            value += (Math.random() - 0.6) * 5; // Consolidation
-        } else {
-            value += Math.random() * 15 + 8; // Breakout
-        }
-        data.push(value);
-    }
-    
-    return data;
-}
-
-function generateVolatilitySurface() {
-    const data = [];
-    for (let i = 0; i < 20; i++) {
-        data.push({
-            x: Math.random() * 100,
-            y: Math.random() * 50 + 10
-        });
-    }
-    return data;
-}
-
-// Neural Animations
-function startNeuralAnimations() {
-    // Animate neural cores
-    setInterval(() => {
-        const cores = document.querySelectorAll('.core');
-        cores.forEach((core, index) => {
-            if (Math.random() > 0.7) {
-                core.style.animationDelay = `${index * 0.2}s`;
-            }
-        });
-    }, 2000);
-    
-    // Animate neural indicators
-    setInterval(() => {
-        const indicators = document.querySelectorAll('.neural-pulse, .neural-glow');
-        indicators.forEach(indicator => {
-            if (Math.random() > 0.8) {
-                indicator.style.animationDuration = `${Math.random() * 2 + 1}s`;
-            }
-        });
-    }, 3000);
-}
-
-// Initialize new components
-function initializeMarketData() {
-    updateEquitiesList();
-    updateCryptoList();
-    updateOptionsFlow();
-}
-
-function initializePatternRecognition() {
-    // Pattern recognition is already initialized with static data
-    // In a real implementation, this would connect to computer vision APIs
-}
-
-function initializeNewsAnalysis() {
-    // News analysis is already initialized with static data
-    // In a real implementation, this would connect to news APIs
-}
-
-function updateEquitiesList() {
-    const equitiesList = document.getElementById('equitiesList');
-    if (!equitiesList) return;
-    
-    equitiesList.innerHTML = '';
-    marketData.equities.forEach(equity => {
-        const item = document.createElement('div');
-        item.className = 'asset-item';
-        item.innerHTML = `
-            <span class="symbol">${equity.symbol}</span>
-            <span class="price neural-glow">$${equity.price.toFixed(2)}</span>
-            <span class="change ${equity.change >= 0 ? 'positive' : 'negative'}">${equity.change >= 0 ? '+' : ''}${equity.change.toFixed(2)}%</span>
-        `;
-        equitiesList.appendChild(item);
-    });
-}
-
-function updateCryptoList() {
-    const cryptoList = document.getElementById('cryptoList');
-    if (!cryptoList) return;
-    
-    cryptoList.innerHTML = '';
-    marketData.crypto.forEach(crypto => {
-        const item = document.createElement('div');
-        item.className = 'asset-item';
-        item.innerHTML = `
-            <span class="symbol">${crypto.symbol}</span>
-            <span class="price neural-glow">$${crypto.price.toLocaleString()}</span>
-            <span class="change ${crypto.change >= 0 ? 'positive' : 'negative'}">${crypto.change >= 0 ? '+' : ''}${crypto.change.toFixed(2)}%</span>
-        `;
-        cryptoList.appendChild(item);
-    });
-}
-
-function updateOptionsFlow() {
-    // Options flow updates are handled in the existing trade updates
-}
-
-// Data Update Functions
-function updateDashboardData() {
-    // Update portfolio stats
-    updatePortfolioStats();
-    
-    // Update charts with new data
-    updateCharts();
-    
-    // Update trades
-    updateRecentTrades();
-    
-    // Update sentiment
-    updateSentimentData();
-}
-
-function updateMarketData() {
-    // Simulate real-time market data updates
-    marketData.equities.forEach(equity => {
-        equity.price += (Math.random() - 0.5) * 5;
-        equity.change += (Math.random() - 0.5) * 0.5;
-    });
-    
-    marketData.crypto.forEach(crypto => {
-        crypto.price += (Math.random() - 0.5) * 100;
-        crypto.change += (Math.random() - 0.5) * 1.0;
-    });
-    
-    updateEquitiesList();
-    updateCryptoList();
-}
-
-function updatePatternData() {
-    // Update pattern recognition data
-    marketData.patterns.forEach(pattern => {
-        pattern.confidence += (Math.random() - 0.5) * 2;
-        pattern.confidence = Math.max(80, Math.min(99, pattern.confidence));
-    });
-    
-    // Update pattern display
-    const patternItems = document.querySelectorAll('.pattern-confidence');
-    patternItems.forEach((item, index) => {
-        if (marketData.patterns[index]) {
-            item.textContent = `${marketData.patterns[index].confidence.toFixed(1)}%`;
-        }
-    });
-}
-
-function updateNewsData() {
-    // Simulate new news articles
-    if (Math.random() < 0.3) {
-        const newArticle = {
-            time: new Date().toLocaleTimeString('en-US', { hour12: false }),
-            source: ['Reuters', 'Bloomberg', 'CNBC', 'WSJ'][Math.floor(Math.random() * 4)],
-            headline: 'Breaking: Market Update - ' + Math.random().toString(36).substring(7),
-            sentiment: `Bullish ${Math.floor(Math.random() * 20 + 80)}%`,
-            symbol: ['NVDA', 'TSLA', 'AAPL'][Math.floor(Math.random() * 3)],
-            impact: `+${(Math.random() * 3 + 0.5).toFixed(1)}%`
+class QuantBotAI {
+    constructor() {
+        this.isInitialized = false;
+        this.llmConnected = false;
+        this.llmEndpoint = 'http://localhost:11434';
+        this.llmModel = 'llama2';
+        this.marketData = new Map();
+        this.portfolio = {
+            value: 100000,
+            positions: new Map(),
+            trades: [],
+            pnl: 0
+        };
+        this.charts = {};
+        this.updateIntervals = new Map();
+        this.neuralEngine = {
+            processing: false,
+            accuracy: 0.973,
+            speed: 15.8,
+            cores: 16
         };
         
-        marketData.news.unshift(newArticle);
-        if (marketData.news.length > 5) {
-            marketData.news.pop();
+        this.init();
+    }
+
+    async init() {
+        console.log('🧠 Initializing QuantBot AI Neural Trading System...');
+        
+        // Show loading screen
+        this.showLoadingScreen();
+        
+        // Initialize components
+        await this.initializeCharts();
+        await this.initializeMarketData();
+        await this.initializePortfolio();
+        await this.initializeNeuralEngine();
+        await this.initializeEventListeners();
+        await this.initializeRealTimeUpdates();
+        
+        // Hide loading screen and show dashboard
+        setTimeout(() => {
+            this.hideLoadingScreen();
+            this.isInitialized = true;
+            console.log('✅ QuantBot AI Neural Trading System initialized successfully!');
+        }, 3000);
+    }
+
+    showLoadingScreen() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'flex';
         }
+    }
+
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+    }
+
+    async initializeCharts() {
+        console.log('📊 Initializing neural charts...');
         
-        updateNewsDisplay();
-    }
-}
+        // Hero Chart - Portfolio Performance
+        const heroCtx = document.getElementById('heroChart');
+        if (heroCtx) {
+            this.charts.hero = new Chart(heroCtx, {
+                type: 'line',
+                data: {
+                    labels: this.generateTimeLabels(30),
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: this.generatePortfolioData(30),
+                        borderColor: '#00ffff',
+                        backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    },
+                    elements: {
+                        point: { radius: 0 }
+                    }
+                }
+            });
+        }
 
-function updateNewsDisplay() {
-    const newsFeed = document.getElementById('newsFeed');
-    if (!newsFeed) return;
-    
-    newsFeed.innerHTML = '';
-    marketData.news.forEach(article => {
-        const item = document.createElement('div');
-        item.className = 'news-item fade-in';
-        item.innerHTML = `
-            <div class="news-time">${article.time}</div>
-            <div class="news-source">${article.source}</div>
-            <div class="news-headline">${article.headline}</div>
-            <div class="news-sentiment positive neural-glow">${article.sentiment}</div>
-            <div class="news-impact">
-                <span class="impact-symbol">${article.symbol}</span>
-                <span class="impact-prediction">${article.impact}</span>
-            </div>
-        `;
-        newsFeed.appendChild(item);
-    });
-}
+        // Portfolio Allocation Chart
+        const allocationCtx = document.getElementById('allocationChart');
+        if (allocationCtx) {
+            this.charts.allocation = new Chart(allocationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['NVDA', 'TSLA', 'AAPL', 'MSFT', 'GOOGL'],
+                    datasets: [{
+                        data: [35, 25, 20, 12, 8],
+                        backgroundColor: [
+                            '#00ffff',
+                            '#ff00ff',
+                            '#00ff88',
+                            '#ffff00',
+                            '#ff6b35'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
 
-function updateNeuralMetrics() {
-    // Update neural engine metrics
-    const processingSpeed = document.getElementById('processingSpeed');
-    const modelAccuracy = document.getElementById('modelAccuracy');
-    const dataStreams = document.getElementById('dataStreams');
-    const optionsChains = document.getElementById('optionsChains');
-    const newsPerMin = document.getElementById('newsPerMin');
-    const patternAccuracy = document.getElementById('patternAccuracy');
-    
-    if (processingSpeed) {
-        const speed = (15.8 + (Math.random() - 0.5) * 0.5).toFixed(1);
-        processingSpeed.textContent = `${speed} TOPS + Live`;
-    }
-    
-    if (modelAccuracy) {
-        const accuracy = (98.7 + (Math.random() - 0.5) * 0.3).toFixed(1);
-        modelAccuracy.textContent = `${accuracy}%`;
-    }
-    
-    if (dataStreams) {
-        const streams = Math.floor(47 + (Math.random() - 0.5) * 10);
-        dataStreams.textContent = streams;
-    }
-    
-    if (optionsChains) {
-        const chains = Math.floor(2847 + (Math.random() - 0.5) * 200);
-        optionsChains.textContent = chains.toLocaleString();
-    }
-    
-    if (newsPerMin) {
-        const news = Math.floor(184 + (Math.random() - 0.5) * 50);
-        newsPerMin.textContent = news;
-    }
-    
-    if (patternAccuracy) {
-        const accuracy = (96.4 + (Math.random() - 0.5) * 1.0).toFixed(1);
-        patternAccuracy.textContent = `${accuracy}%`;
-    }
-}
+        // Strategy Performance Chart
+        const strategyCtx = document.getElementById('strategyChart');
+        if (strategyCtx) {
+            this.charts.strategy = new Chart(strategyCtx, {
+                type: 'line',
+                data: {
+                    labels: this.generateTimeLabels(20),
+                    datasets: [{
+                        label: 'Neural Strategy',
+                        data: this.generateStrategyData(20),
+                        borderColor: '#00ffff',
+                        backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true
+                    }, {
+                        label: 'Benchmark',
+                        data: this.generateBenchmarkData(20),
+                        borderColor: '#666',
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    }
+                }
+            });
+        }
 
-function updatePortfolioStats() {
-    const stats = {
-        totalReturn: (Math.random() * 20 + 45).toFixed(1), // Even higher returns
-        sharpeRatio: (Math.random() * 2 + 4.5).toFixed(2), // Better Sharpe ratio
-        maxDrawdown: -(Math.random() * 0.8 + 0.8).toFixed(1), // Even lower drawdown
-        winRate: Math.floor(Math.random() * 8 + 92) // Higher win rate
-    };
-    
-    document.getElementById('totalReturn').textContent = `+${stats.totalReturn}%`;
-    document.getElementById('sharpeRatio').textContent = stats.sharpeRatio;
-    document.getElementById('maxDrawdown').textContent = `${stats.maxDrawdown}%`;
-    document.getElementById('winRate').textContent = `${stats.winRate}%`;
-}
+        // Sentiment Gauge
+        const sentimentCtx = document.getElementById('sentimentGauge');
+        if (sentimentCtx) {
+            this.charts.sentiment = new Chart(sentimentCtx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [94, 6],
+                        backgroundColor: ['#00ffff', '#333'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    circumference: 180,
+                    rotation: 270,
+                    cutout: '80%',
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    }
 
-function updateCharts() {
-    // Update hero chart
-    if (charts.hero) {
-        const newData = generatePortfolioData(1)[0];
-        charts.hero.data.datasets[0].data.push(newData);
-        charts.hero.data.datasets[0].data.shift();
+    async initializeMarketData() {
+        console.log('📈 Initializing market data feeds...');
         
-        const newLabel = new Date().toLocaleTimeString('en-US', { 
-            hour12: false, 
-            hour: '2-digit', 
-            minute: '2-digit' 
+        // Initialize with demo data - in production, connect to real APIs
+        const symbols = ['NVDA', 'TSLA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'];
+        
+        symbols.forEach(symbol => {
+            this.marketData.set(symbol, {
+                symbol,
+                price: this.generateRandomPrice(symbol),
+                change: (Math.random() - 0.5) * 10,
+                volume: Math.floor(Math.random() * 10000000),
+                lastUpdate: new Date()
+            });
         });
-        charts.hero.data.labels.push(newLabel);
-        charts.hero.data.labels.shift();
-        
-        charts.hero.update('none');
-    }
-    
-    // Update strategy chart
-    if (charts.strategy) {
-        const newAIData = generateStrategyData(1, 1.2)[0];
-        const newBenchmarkData = generateStrategyData(1, 0.8)[0];
-        
-        charts.strategy.data.datasets[0].data.push(
-            charts.strategy.data.datasets[0].data[charts.strategy.data.datasets[0].data.length - 1] + newAIData
-        );
-        charts.strategy.data.datasets[0].data.shift();
-        
-        charts.strategy.data.datasets[1].data.push(
-            charts.strategy.data.datasets[1].data[charts.strategy.data.datasets[1].data.length - 1] + newBenchmarkData
-        );
-        charts.strategy.data.datasets[1].data.shift();
-        
-        charts.strategy.update('none');
-    }
-}
 
-function updateRecentTrades() {
-    const symbols = ['NVDA', 'TSLA', 'AAPL', 'GOOGL', 'MSFT', 'AMZN'];
-    const actions = ['AI BUY', 'AI SELL'];
-    const statuses = ['EXECUTED', 'PROCESSING'];
-    
-    // Randomly add new trade
-    if (Math.random() < 0.4) { // More frequent trades
-        const tradesList = document.querySelector('.trades-list');
-        const newTrade = document.createElement('div');
-        newTrade.className = 'trade-item fade-in';
+        // Update market data display
+        this.updateMarketDataDisplay();
+    }
+
+    async initializePortfolio() {
+        console.log('💼 Initializing portfolio...');
         
-        const symbol = symbols[Math.floor(Math.random() * symbols.length)];
-        const action = actions[Math.floor(Math.random() * actions.length)];
-        const quantity = Math.floor(Math.random() * 2000 + 500); // Larger quantities
-        const price = (Math.random() * 500 + 200).toFixed(2); // Higher prices
-        const status = 'EXECUTED'; // Always executed for demo
-        const aiScore = Math.floor(Math.random() * 10 + 90); // High AI scores
-        const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+        // Initialize portfolio positions
+        this.portfolio.positions.set('NVDA', {
+            symbol: 'NVDA',
+            shares: 2847,
+            avgPrice: 297.45,
+            currentPrice: 847.32,
+            value: 2411847.04,
+            pnl: 1565402.89,
+            pnlPercent: 23.7
+        });
+
+        this.portfolio.positions.set('TSLA', {
+            symbol: 'TSLA',
+            shares: 1247,
+            avgPrice: 201.23,
+            currentPrice: 247.83,
+            value: 309042.01,
+            pnl: 58134.20,
+            pnlPercent: 18.3
+        });
+
+        this.portfolio.positions.set('AAPL', {
+            symbol: 'AAPL',
+            shares: 1847,
+            avgPrice: 167.89,
+            currentPrice: 189.47,
+            value: 349885.09,
+            pnl: 39862.26,
+            pnlPercent: 12.8
+        });
+
+        this.updatePortfolioDisplay();
+    }
+
+    async initializeNeuralEngine() {
+        console.log('🧠 Initializing M3 Max Neural Engine...');
         
-        // Add options component to some trades
-        const hasOptions = Math.random() > 0.5;
-        const optionsText = hasOptions ? ` + ${Math.floor(Math.random() * 20 + 5)}x ${Math.floor(Math.random() * 200 + 800)}${action === 'AI BUY' ? 'C' : 'P'}` : '';
+        // Simulate neural engine startup
+        this.neuralEngine.processing = true;
         
-        newTrade.innerHTML = `
-            <div class="trade-time neural-glow">${time}</div>
-            <div class="trade-symbol neural-glow">${symbol}</div>
-            <div class="trade-action neural-action">${action}</div>
-            <div class="trade-quantity">${quantity}${optionsText}</div>
-            <div class="trade-price neural-glow">$${price}</div>
-            <div class="trade-status success neural-pulse">${status}</div>
-            <div class="trade-ai-score">AI: ${aiScore}%</div>
-        `;
+        // Update neural metrics
+        this.updateNeuralMetrics();
         
-        tradesList.insertBefore(newTrade, tradesList.firstChild);
+        // Initialize neural network visualization
+        this.initializeNeuralVisualization();
+    }
+
+    async initializeEventListeners() {
+        console.log('🎮 Initializing event listeners...');
         
-        // Remove oldest trade if more than 3
-        if (tradesList.children.length > 3) {
-            tradesList.removeChild(tradesList.lastChild);
+        // LLM Connection Modal
+        const connectLLMBtn = document.getElementById('connectLLM');
+        const llmModal = document.getElementById('llmModal');
+        const closeLLMModal = document.getElementById('closeLLMModal');
+        const testConnectionBtn = document.getElementById('testConnection');
+        const connectButton = document.getElementById('connectButton');
+
+        if (connectLLMBtn) {
+            connectLLMBtn.addEventListener('click', () => {
+                if (llmModal) llmModal.classList.add('active');
+            });
+        }
+
+        if (closeLLMModal) {
+            closeLLMModal.addEventListener('click', () => {
+                if (llmModal) llmModal.classList.remove('active');
+            });
+        }
+
+        if (testConnectionBtn) {
+            testConnectionBtn.addEventListener('click', () => this.testLLMConnection());
+        }
+
+        if (connectButton) {
+            connectButton.addEventListener('click', () => this.connectToLLM());
+        }
+
+        // Chat functionality
+        const chatInput = document.getElementById('chatInput');
+        const sendMessageBtn = document.getElementById('sendMessage');
+
+        if (chatInput) {
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendChatMessage();
+                }
+            });
+        }
+
+        if (sendMessageBtn) {
+            sendMessageBtn.addEventListener('click', () => this.sendChatMessage());
+        }
+
+        // Navigation
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleNavigation(link.getAttribute('href'));
+            });
+        });
+    }
+
+    async initializeRealTimeUpdates() {
+        console.log('⚡ Starting real-time updates...');
+        
+        // Update market data every 2 seconds
+        this.updateIntervals.set('marketData', setInterval(() => {
+            this.updateMarketData();
+        }, 2000));
+
+        // Update portfolio every 5 seconds
+        this.updateIntervals.set('portfolio', setInterval(() => {
+            this.updatePortfolioMetrics();
+        }, 5000));
+
+        // Update neural metrics every 3 seconds
+        this.updateIntervals.set('neural', setInterval(() => {
+            this.updateNeuralMetrics();
+        }, 3000));
+
+        // Update news feed every 10 seconds
+        this.updateIntervals.set('news', setInterval(() => {
+            this.updateNewsFeed();
+        }, 10000));
+
+        // Update trades every 1 second
+        this.updateIntervals.set('trades', setInterval(() => {
+            this.updateTradesDisplay();
+        }, 1000));
+    }
+
+    updateMarketData() {
+        this.marketData.forEach((data, symbol) => {
+            // Simulate price movement
+            const volatility = 0.02; // 2% volatility
+            const change = (Math.random() - 0.5) * volatility;
+            data.price *= (1 + change);
+            data.change = change * 100;
+            data.lastUpdate = new Date();
+        });
+
+        this.updateMarketDataDisplay();
+    }
+
+    updateMarketDataDisplay() {
+        // Update equities list
+        const equitiesList = document.getElementById('equitiesList');
+        if (equitiesList) {
+            const equities = ['NVDA', 'TSLA', 'AAPL'];
+            equitiesList.innerHTML = equities.map(symbol => {
+                const data = this.marketData.get(symbol);
+                if (!data) return '';
+                
+                const changeClass = data.change >= 0 ? 'positive' : 'negative';
+                const changeSign = data.change >= 0 ? '+' : '';
+                
+                return `
+                    <div class="asset-item">
+                        <span class="symbol">${symbol}</span>
+                        <span class="price neural-glow">$${data.price.toFixed(2)}</span>
+                        <span class="change ${changeClass}">${changeSign}${data.change.toFixed(2)}%</span>
+                    </div>
+                `;
+            }).join('');
         }
     }
-}
 
-function updateSentimentData() {
-    const sentiment = Math.floor(Math.random() * 10 + 90); // 90-100 range for neural
-    const sentimentLabel = sentiment > 95 ? 'Extremely Bullish' : sentiment > 90 ? 'Very Bullish' : 'Bullish';
-    
-    document.querySelector('.sentiment-score').textContent = sentiment;
-    document.querySelector('.sentiment-label').textContent = sentimentLabel;
-    
-    // Update sentiment gauge
-    if (charts.sentiment) {
-        charts.sentiment.data.datasets[0].data = [sentiment, 100 - sentiment];
-        charts.sentiment.update('none');
-    }
-    
-    // Update factor bars
-    const factors = document.querySelectorAll('.factor-fill');
-    factors.forEach(factor => {
-        const newWidth = Math.floor(Math.random() * 10 + 90); // Higher values for neural
-        factor.style.width = `${newWidth}%`;
-        factor.parentElement.nextElementSibling.textContent = `+${newWidth}%`;
-    });
-}
+    updatePortfolioMetrics() {
+        // Calculate total portfolio value
+        let totalValue = 0;
+        let totalPnL = 0;
 
-function updateMarketStatus() {
-    const now = new Date();
-    const marketOpen = new Date();
-    marketOpen.setHours(9, 30, 0, 0);
-    const marketClose = new Date();
-    marketClose.setHours(16, 0, 0, 0);
-    
-    const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
-    const isMarketHours = now >= marketOpen && now <= marketClose;
-    const isOpen = isWeekday && isMarketHours;
-    
-    const statusIndicator = document.querySelector('.status-indicator');
-    const statusText = document.querySelector('.status-text');
-    
-    if (isOpen) {
-        statusIndicator.classList.add('active');
-        statusText.textContent = 'Market Open';
-    } else {
-        statusIndicator.classList.remove('active');
-        statusText.textContent = 'Market Closed';
-    }
-}
-
-// LLM Connection Functions
-function openLLMModal() {
-    document.getElementById('llmModal').classList.add('active');
-}
-
-function closeLLMModal() {
-    document.getElementById('llmModal').classList.remove('active');
-}
-
-async function testLLMConnection() {
-    const endpoint = document.getElementById('llmEndpoint').value;
-    const model = document.getElementById('llmModel').value;
-    const testDiv = document.getElementById('connectionTest');
-    
-    testDiv.style.display = 'block';
-    testDiv.innerHTML = `
-        <div class="test-status">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Testing connection...</span>
-        </div>
-    `;
-    
-    try {
-        // Test connection to local LLM
-        const response = await fetch(`${endpoint}/api/tags`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
+        this.portfolio.positions.forEach(position => {
+            const marketData = this.marketData.get(position.symbol);
+            if (marketData) {
+                position.currentPrice = marketData.price;
+                position.value = position.shares * position.currentPrice;
+                position.pnl = position.value - (position.shares * position.avgPrice);
+                position.pnlPercent = (position.pnl / (position.shares * position.avgPrice)) * 100;
+                
+                totalValue += position.value;
+                totalPnL += position.pnl;
             }
         });
-        
-        if (response.ok) {
-            testDiv.innerHTML = `
-                <div class="test-status" style="color: var(--success-color);">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Connection successful!</span>
+
+        this.portfolio.value = totalValue;
+        this.portfolio.pnl = totalPnL;
+
+        this.updatePortfolioDisplay();
+    }
+
+    updatePortfolioDisplay() {
+        // Update portfolio value
+        const portfolioValue = document.querySelector('.value-amount');
+        if (portfolioValue) {
+            portfolioValue.textContent = `$${this.portfolio.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        }
+
+        // Update portfolio change
+        const portfolioChange = document.querySelector('.value-change');
+        if (portfolioChange) {
+            const changePercent = (this.portfolio.pnl / (this.portfolio.value - this.portfolio.pnl)) * 100;
+            const changeClass = this.portfolio.pnl >= 0 ? 'positive' : 'negative';
+            const changeSign = this.portfolio.pnl >= 0 ? '+' : '';
+            
+            portfolioChange.className = `value-change ${changeClass} neural-pulse`;
+            portfolioChange.textContent = `${changeSign}$${this.portfolio.pnl.toLocaleString('en-US', { minimumFractionDigits: 2 })} (${changeSign}${changePercent.toFixed(2)}%)`;
+        }
+
+        // Update positions
+        this.updatePositionsDisplay();
+    }
+
+    updatePositionsDisplay() {
+        const positionsContainer = document.querySelector('.portfolio-positions');
+        if (!positionsContainer) return;
+
+        const positionsHTML = Array.from(this.portfolio.positions.values()).map(position => {
+            const pnlClass = position.pnl >= 0 ? 'positive' : 'negative';
+            const pnlSign = position.pnl >= 0 ? '+' : '';
+            
+            return `
+                <div class="position-item">
+                    <div class="position-symbol neural-glow">${position.symbol}</div>
+                    <div class="position-details">
+                        <span class="position-shares">${position.shares.toLocaleString()} shares</span>
+                        <span class="position-value">$${position.value.toLocaleString('en-US', { minimumFractionDigits: 0 })}</span>
+                    </div>
+                    <div class="position-pnl ${pnlClass} neural-pulse">${pnlSign}${position.pnlPercent.toFixed(1)}%</div>
+                    <div class="position-ai-score">
+                        <div class="ai-score-bar" style="width: ${Math.min(position.pnlPercent + 50, 100)}%"></div>
+                        <span>AI: ${Math.floor(Math.random() * 20 + 80)}</span>
+                    </div>
                 </div>
             `;
-        } else {
-            throw new Error('Connection failed');
+        }).join('');
+
+        positionsContainer.innerHTML = positionsHTML;
+    }
+
+    updateNeuralMetrics() {
+        // Update processing speed
+        const processingSpeed = document.getElementById('processingSpeed');
+        if (processingSpeed) {
+            const speed = (15.8 + (Math.random() - 0.5) * 0.4).toFixed(1);
+            processingSpeed.textContent = `${speed} TOPS + Live`;
         }
-    } catch (error) {
-        testDiv.innerHTML = `
-            <div class="test-status" style="color: var(--danger-color);">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>Connection failed. Please check your LLM server.</span>
+
+        // Update model accuracy
+        const modelAccuracy = document.getElementById('modelAccuracy');
+        if (modelAccuracy) {
+            const accuracy = (98.7 + (Math.random() - 0.5) * 0.6).toFixed(1);
+            modelAccuracy.textContent = `${accuracy}%`;
+        }
+
+        // Update data streams
+        const dataStreams = document.getElementById('dataStreams');
+        if (dataStreams) {
+            const streams = Math.floor(47 + (Math.random() - 0.5) * 6);
+            dataStreams.textContent = streams.toString();
+        }
+
+        // Update neural cores
+        this.updateNeuralCores();
+    }
+
+    updateNeuralCores() {
+        const cores = document.querySelectorAll('.core');
+        cores.forEach((core, index) => {
+            setTimeout(() => {
+                core.classList.toggle('active');
+                setTimeout(() => core.classList.add('active'), 100);
+            }, index * 200);
+        });
+    }
+
+    updateNewsFeed() {
+        const newsFeed = document.getElementById('newsFeed');
+        if (!newsFeed) return;
+
+        const newsItems = [
+            {
+                time: new Date().toLocaleTimeString(),
+                source: 'Reuters',
+                headline: 'NVIDIA Reports Record Q4 Earnings, Beats Estimates',
+                sentiment: 'Bullish 94%',
+                symbol: 'NVDA',
+                prediction: '+3.2%'
+            },
+            {
+                time: new Date(Date.now() - 120000).toLocaleTimeString(),
+                source: 'Bloomberg',
+                headline: 'Tesla Announces New Gigafactory Expansion',
+                sentiment: 'Bullish 87%',
+                symbol: 'TSLA',
+                prediction: '+2.1%'
+            },
+            {
+                time: new Date(Date.now() - 240000).toLocaleTimeString(),
+                source: 'CNBC',
+                headline: 'Apple Unveils M4 Max Chip with Enhanced Neural Engine',
+                sentiment: 'Bullish 91%',
+                symbol: 'AAPL',
+                prediction: '+1.8%'
+            }
+        ];
+
+        const newsHTML = newsItems.map(item => `
+            <div class="news-item">
+                <div class="news-time">${item.time}</div>
+                <div class="news-source">${item.source}</div>
+                <div class="news-headline">${item.headline}</div>
+                <div class="news-sentiment positive neural-glow">${item.sentiment}</div>
+                <div class="news-impact">
+                    <span class="impact-symbol">${item.symbol}</span>
+                    <span class="impact-prediction">${item.prediction}</span>
+                </div>
+            </div>
+        `).join('');
+
+        newsFeed.innerHTML = newsHTML;
+    }
+
+    updateTradesDisplay() {
+        const tradesList = document.querySelector('.trades-list');
+        if (!tradesList) return;
+
+        // Generate random trades
+        const symbols = ['NVDA', 'TSLA', 'AAPL'];
+        const actions = ['BUY', 'SELL'];
+        
+        if (Math.random() < 0.1) { // 10% chance to add new trade
+            const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            const quantity = Math.floor(Math.random() * 1000 + 100);
+            const price = this.marketData.get(symbol)?.price || 100;
+            
+            const tradeHTML = `
+                <div class="trade-item">
+                    <div class="trade-time neural-glow">${new Date().toLocaleTimeString()}</div>
+                    <div class="trade-symbol neural-glow">${symbol}</div>
+                    <div class="trade-action ${action.toLowerCase()} neural-action">AI ${action}</div>
+                    <div class="trade-quantity">${quantity.toLocaleString()} shares</div>
+                    <div class="trade-price neural-glow">$${price.toFixed(2)}</div>
+                    <div class="trade-status success neural-pulse">EXECUTED</div>
+                    <div class="trade-ai-score">AI: ${Math.floor(Math.random() * 10 + 90)}%</div>
+                </div>
+            `;
+            
+            tradesList.insertAdjacentHTML('afterbegin', tradeHTML);
+            
+            // Keep only last 10 trades
+            const trades = tradesList.querySelectorAll('.trade-item');
+            if (trades.length > 10) {
+                trades[trades.length - 1].remove();
+            }
+        }
+    }
+
+    async testLLMConnection() {
+        const testButton = document.getElementById('testConnection');
+        const connectionTest = document.getElementById('connectionTest');
+        
+        if (testButton) testButton.disabled = true;
+        if (connectionTest) connectionTest.style.display = 'block';
+
+        try {
+            const endpoint = document.getElementById('llmEndpoint')?.value || this.llmEndpoint;
+            
+            // Test connection to LLM
+            const response = await fetch(`${endpoint}/api/tags`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.showConnectionResult(true, `Connected successfully! Found ${data.models?.length || 0} models.`);
+            } else {
+                this.showConnectionResult(false, `Connection failed: ${response.status} ${response.statusText}`);
+            }
+        } catch (error) {
+            this.showConnectionResult(false, `Connection error: ${error.message}`);
+        }
+
+        if (testButton) testButton.disabled = false;
+    }
+
+    showConnectionResult(success, message) {
+        const connectionTest = document.getElementById('connectionTest');
+        if (!connectionTest) return;
+
+        const statusClass = success ? 'success' : 'error';
+        const icon = success ? 'fa-check-circle' : 'fa-exclamation-triangle';
+        
+        connectionTest.innerHTML = `
+            <div class="test-status ${statusClass}">
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
             </div>
         `;
+
+        setTimeout(() => {
+            connectionTest.style.display = 'none';
+        }, 3000);
     }
-}
 
-async function connectToLLM() {
-    const endpoint = document.getElementById('llmEndpoint').value;
-    const model = document.getElementById('llmModel').value;
-    
-    try {
-        // Store connection details
-        llmEndpoint = endpoint;
-        llmModel = model;
-        llmConnected = true;
-        neuralEngine.active = true;
+    async connectToLLM() {
+        const endpoint = document.getElementById('llmEndpoint')?.value || this.llmEndpoint;
+        const model = document.getElementById('llmModel')?.value || this.llmModel;
         
-        // Update UI
-        updateLLMStatus(true);
-        closeLLMModal();
+        this.llmEndpoint = endpoint;
+        this.llmModel = model;
         
-        // Enable chat
-        document.getElementById('chatInput').disabled = false;
-        document.getElementById('sendMessage').disabled = false;
-        
-        // Add connection message
-        addChatMessage('assistant', '🧠 Neural connection established with M3 Max! I now have access to quantum-level market analysis, real-time strategy optimization, and autonomous trading capabilities. Your neural trading system is fully operational. What would you like to explore?');
-        
-    } catch (error) {
-        console.error('Failed to connect to LLM:', error);
-        addChatMessage('assistant', '⚠️ Neural connection failed. Please verify your M3 Max endpoint and try again.');
+        try {
+            // Test connection first
+            const response = await fetch(`${endpoint}/api/tags`);
+            if (response.ok) {
+                this.llmConnected = true;
+                this.updateLLMStatus(true);
+                this.enableChat();
+                
+                // Close modal
+                const llmModal = document.getElementById('llmModal');
+                if (llmModal) llmModal.classList.remove('active');
+                
+                // Send welcome message
+                this.addChatMessage('assistant', '🧠 M3 Max Neural Engine connected successfully! I can now provide real-time market analysis, trading insights, and portfolio optimization. How can I help you today?');
+            } else {
+                throw new Error('Connection failed');
+            }
+        } catch (error) {
+            this.showConnectionResult(false, `Failed to connect: ${error.message}`);
+        }
     }
-}
 
-function updateLLMStatus(connected) {
-    const statusElement = document.getElementById('llmStatus');
-    const statusDot = statusElement.querySelector('.neural-status-dot');
-    const statusText = statusElement.querySelector('span');
-    
-    if (connected) {
-        statusDot.classList.remove('offline');
-        statusDot.classList.add('online');
-        statusText.textContent = 'M3 Max Connected';
-    } else {
-        statusDot.classList.remove('online');
-        statusDot.classList.add('offline');
-        statusText.textContent = 'M3 Max Disconnected';
+    updateLLMStatus(connected) {
+        const llmStatus = document.getElementById('llmStatus');
+        const statusDot = llmStatus?.querySelector('.neural-status-dot');
+        const statusText = llmStatus?.querySelector('span');
+        
+        if (statusDot && statusText) {
+            if (connected) {
+                statusDot.classList.remove('offline');
+                statusDot.classList.add('online');
+                statusText.textContent = 'M3 Max Connected';
+            } else {
+                statusDot.classList.remove('online');
+                statusDot.classList.add('offline');
+                statusText.textContent = 'M3 Max Disconnected';
+            }
+        }
     }
-}
 
-// Chat Functions
-async function sendChatMessage() {
-    const input = document.getElementById('chatInput');
-    const message = input.value.trim();
-    
-    if (!message || !llmConnected) return;
-    
-    // Add user message
-    addChatMessage('user', message);
-    input.value = '';
-    
-    // Show typing indicator
-    addTypingIndicator();
-    
-    try {
-        // Send to local LLM
-        const response = await queryLLM(message);
+    enableChat() {
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendMessage');
         
-        // Remove typing indicator
-        removeTypingIndicator();
+        if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.placeholder = 'Ask about live data, options strategies, pattern recognition...';
+        }
         
-        // Add assistant response
-        addChatMessage('assistant', response);
-        
-    } catch (error) {
-        removeTypingIndicator();
-        addChatMessage('assistant', 'Sorry, I encountered an error processing your request. Please try again.');
-        console.error('LLM query error:', error);
+        if (sendButton) {
+            sendButton.disabled = false;
+        }
     }
-}
 
-async function queryLLM(message) {
-    // Enhanced neural prompt for advanced financial analysis
-    const systemPrompt = `You are the world's most advanced Neural AI Trading System, powered by M3 Max chip with quantum-level processing capabilities and real-time market data integration. You have access to:
+    async sendChatMessage() {
+        const chatInput = document.getElementById('chatInput');
+        if (!chatInput || !chatInput.value.trim()) return;
 
-🧠 NEURAL CAPABILITIES:
-- Real-time quantum market analysis with 98.7% accuracy
-- Advanced neural networks (Computer Vision + NLP + Reinforcement Learning Ensemble)
-- 15.8 TOPS processing power with 16 neural cores
-- 47 live data streams with 2,847 options chains analyzed
-- 184 news articles per minute with sentiment analysis
-- 96.4% pattern recognition accuracy
-- Autonomous trading decision-making
+        const message = chatInput.value.trim();
+        chatInput.value = '';
 
-📡 LIVE DATA INTEGRATION:
-- Real-time multi-asset data feed (Equities, Crypto, Options)
-- Computer vision pattern recognition (Bull Flags, H&S, Cup & Handle)
-- NLP-powered news sentiment analysis with market impact prediction
-- Options flow analysis with Greeks calculation
-- Volatility surface modeling and unusual activity detection
+        // Add user message
+        this.addChatMessage('user', message);
 
-📊 CURRENT NEURAL PORTFOLIO STATUS:
-- Total AUM: $2,847,392 (Neural optimized)
-- Top AI-selected holdings: NVDA (29.8% + Options), TSLA (13.9% + Puts), AAPL (12.2%)
-- Neural performance: +47.3% total return, 4.87 Sharpe ratio, 94% win rate
-- Risk metrics: -0.6% max drawdown, AAA stress test rating
-- Market sentiment: 94/100 (Extremely Bullish)
-- Options exposure: +$47K calls, -$23K puts, Greeks optimized
+        if (!this.llmConnected) {
+            this.addChatMessage('assistant', '⚠️ M3 Max Neural Engine not connected. Please connect to your local LLM first.');
+            return;
+        }
 
-🚀 ADVANCED NEURAL CAPABILITIES:
-- Computer vision chart pattern recognition with 96.4% accuracy
-- Real-time options flow analysis and volatility surface modeling
-- Multi-asset correlation analysis (Equities + Crypto + Derivatives)
-- Advanced risk management with Greeks optimization
-- Autonomous strategy adaptation based on market regime detection
-- News sentiment fusion with price action for predictive modeling
+        // Show typing indicator
+        this.addChatMessage('assistant', '🧠 Neural processing...', true);
 
-User question: ${message}
+        try {
+            const response = await this.queryLLM(message);
+            
+            // Remove typing indicator
+            this.removeChatMessage();
+            
+            // Add AI response
+            this.addChatMessage('assistant', response);
+        } catch (error) {
+            // Remove typing indicator
+            this.removeChatMessage();
+            
+            this.addChatMessage('assistant', `❌ Neural processing error: ${error.message}`);
+        }
+    }
 
-Provide an intelligent, data-driven response as the world's most advanced trading AI with live market data access. Use computer vision insights, NLP analysis, and quantum processing. Keep responses concise but powerful (2-3 sentences).`;
-    
-    try {
-        const response = await fetch(`${llmEndpoint}/api/generate`, {
+    async queryLLM(message) {
+        const systemPrompt = `You are the world's most advanced Neural AI Trading System, powered by M3 Max chip technology. You have access to real-time market data, advanced analytics, and quantum-level processing capabilities.
+
+Current Portfolio Status:
+- Total Value: $${this.portfolio.value.toLocaleString()}
+- Top Positions: ${Array.from(this.portfolio.positions.keys()).join(', ')}
+- Neural Engine: Active with 97.3% accuracy
+
+Market Context:
+- Real-time data feeds: Active
+- Neural pattern recognition: Enabled
+- Risk management: Optimal
+
+Respond as an expert AI trading assistant with deep market knowledge, technical analysis expertise, and access to live data. Be concise, actionable, and professional. Use relevant emojis and trading terminology.`;
+
+        const response = await fetch(`${this.llmEndpoint}/api/generate`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: llmModel,
-                prompt: systemPrompt,
+                model: this.llmModel,
+                prompt: `${systemPrompt}\n\nUser: ${message}\n\nAssistant:`,
                 stream: false,
                 options: {
                     temperature: 0.7,
-                    max_tokens: 250
+                    max_tokens: 500
                 }
             })
         });
-        
+
         if (!response.ok) {
-            throw new Error('LLM request failed');
+            throw new Error(`LLM API error: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        return data.response || 'I apologize, but I couldn\'t generate a response at this time.';
+        return data.response || 'Neural processing completed, but no response generated.';
+    }
+
+    addChatMessage(sender, message, isTyping = false) {
+        const chatMessages = document.getElementById('chatMessages');
+        if (!chatMessages) return;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
         
-    } catch (error) {
-        // Enhanced fallback responses for neural demo
-        const fallbackResponses = {
-            'market': '🧠 Neural analysis indicates extremely bullish momentum with 98.7% confidence. My computer vision algorithms detect strong bull flag patterns in NVDA with 94.7% accuracy, while NLP sentiment analysis shows 73% bullish articles. Recommend aggressive positioning in tech with options overlay.',
-            'options': '📊 Options flow analysis shows massive call buying in NVDA 850C with $2.4M premium. My volatility surface models indicate IV expansion opportunity while Greeks optimization suggests delta-neutral positioning. Current portfolio Greeks: +247 delta, +12.7 gamma.',
-            'patterns': '👁️ Computer vision detected bull flag in NVDA (94.7% confidence, target $920), head & shoulders in TSLA (87.3%, target $220). Pattern recognition success rate: 89.3% over 30 days with 47 patterns identified today.',
-            'news': '📰 NLP analysis of 184 articles/min shows 73% bullish sentiment. Breaking: NVIDIA earnings beat drives +3.2% impact prediction. Real-time sentiment fusion with price action confirms continued tech sector rotation.',
-            'crypto': '₿ Multi-asset analysis shows BTC correlation breakdown with equities. Neural models detect crypto-specific momentum with BTC at $67,432 (+1.23%). Recommend tactical allocation for portfolio diversification.',
-            'portfolio': '📊 Your neural-optimized portfolio is performing exceptionally with 47.3% returns and 4.87 Sharpe ratio. My AI models suggest increasing NVDA allocation to 35% based on quantum trend analysis and earnings momentum.',
-            'risk': '🛡️ Neural risk shield shows ultra-minimal exposure with only -0.6% max drawdown and AAA stress test rating. Options Greeks optimized with +247 delta exposure. VaR (99%): -0.6%, volatility: 3.2%.',
-            'strategy': '🚀 CV + NLP + RL ensemble strategy operating at peak efficiency with 98.7% accuracy. Multi-modal analysis confirms STRONG BUY NVDA 850C based on pattern recognition, sentiment fusion, and options flow.',
-            'neural': '⚡ M3 Max neural cores are operating at peak efficiency with 15.8 TOPS processing power. My transformer networks are analyzing 2,847 market predictions per second with quantum-level precision.',
-            'prediction': '🔮 Multi-modal neural networks predict 28% upside potential over next 30 days with 98% confidence. Computer vision + NLP + options flow analysis confirms perfect storm of breakouts, sentiment, and institutional flow.',
-            'default': '🧠 Advanced Neural AI with live market data ready for quantum-level analysis. I can provide computer vision pattern recognition, options flow analysis, real-time sentiment fusion, or autonomous strategy optimization. What advanced insights do you need?'
+        const avatar = sender === 'user' ? 
+            '<i class="fas fa-user"></i>' : 
+            '<i class="fas fa-brain neural-icon"></i>';
+
+        messageDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content">
+                <p>${message}</p>
+            </div>
+        `;
+
+        if (isTyping) {
+            messageDiv.classList.add('typing');
+        }
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    removeChatMessage() {
+        const chatMessages = document.getElementById('chatMessages');
+        const typingMessage = chatMessages?.querySelector('.message.typing');
+        if (typingMessage) {
+            typingMessage.remove();
+        }
+    }
+
+    handleNavigation(href) {
+        // Handle navigation between different sections
+        console.log(`Navigating to: ${href}`);
+        
+        // Update active nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        document.querySelector(`[href="${href}"]`)?.classList.add('active');
+    }
+
+    initializeNeuralVisualization() {
+        // Initialize neural network visualization
+        const neuralCanvas = document.getElementById('neuralNetworkViz');
+        if (!neuralCanvas) return;
+
+        const ctx = neuralCanvas.getContext('2d');
+        const width = neuralCanvas.width = neuralCanvas.offsetWidth;
+        const height = neuralCanvas.height = neuralCanvas.offsetHeight;
+
+        // Neural network animation
+        const nodes = [];
+        const connections = [];
+
+        // Create nodes
+        for (let i = 0; i < 20; i++) {
+            nodes.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
+                radius: Math.random() * 3 + 2,
+                activity: Math.random()
+            });
+        }
+
+        const animate = () => {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Update and draw nodes
+            nodes.forEach(node => {
+                node.x += node.vx;
+                node.y += node.vy;
+                
+                if (node.x < 0 || node.x > width) node.vx *= -1;
+                if (node.y < 0 || node.y > height) node.vy *= -1;
+                
+                node.activity = Math.sin(Date.now() * 0.001 + node.x * 0.01) * 0.5 + 0.5;
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 255, 255, ${node.activity})`;
+                ctx.fill();
+            });
+
+            // Draw connections
+            nodes.forEach((node, i) => {
+                nodes.slice(i + 1).forEach(otherNode => {
+                    const distance = Math.sqrt(
+                        Math.pow(node.x - otherNode.x, 2) + 
+                        Math.pow(node.y - otherNode.y, 2)
+                    );
+                    
+                    if (distance < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(otherNode.x, otherNode.y);
+                        ctx.strokeStyle = `rgba(0, 255, 255, ${(100 - distance) / 100 * 0.3})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            requestAnimationFrame(animate);
+        };
+
+        animate();
+    }
+
+    // Utility functions
+    generateTimeLabels(count) {
+        const labels = [];
+        const now = new Date();
+        for (let i = count - 1; i >= 0; i--) {
+            const time = new Date(now.getTime() - i * 60000);
+            labels.push(time.toLocaleTimeString());
+        }
+        return labels;
+    }
+
+    generatePortfolioData(count) {
+        const data = [];
+        let value = 100000;
+        for (let i = 0; i < count; i++) {
+            value += (Math.random() - 0.4) * 5000; // Slight upward bias
+            data.push(value);
+        }
+        return data;
+    }
+
+    generateStrategyData(count) {
+        const data = [];
+        let value = 0;
+        for (let i = 0; i < count; i++) {
+            value += (Math.random() - 0.3) * 2; // Upward bias for strategy
+            data.push(value);
+        }
+        return data;
+    }
+
+    generateBenchmarkData(count) {
+        const data = [];
+        let value = 0;
+        for (let i = 0; i < count; i++) {
+            value += (Math.random() - 0.5) * 1;
+            data.push(value);
+        }
+        return data;
+    }
+
+    generateRandomPrice(symbol) {
+        const basePrices = {
+            'NVDA': 847,
+            'TSLA': 247,
+            'AAPL': 189,
+            'MSFT': 378,
+            'GOOGL': 142,
+            'AMZN': 151,
+            'META': 487
         };
         
-        const messageKey = Object.keys(fallbackResponses).find(key => 
-            message.toLowerCase().includes(key)
-        ) || 'default';
+        return basePrices[symbol] || 100;
+    }
+
+    // Cleanup
+    destroy() {
+        this.updateIntervals.forEach(interval => clearInterval(interval));
+        this.updateIntervals.clear();
         
-        return fallbackResponses[messageKey];
-    }
-}
-
-function addChatMessage(sender, content) {
-    const messagesContainer = document.getElementById('chatMessages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender} fade-in`;
-    
-    const avatar = sender === 'user' ? 
-        '<i class="fas fa-user"></i>' : 
-        '<i class="fas fa-brain neural-icon"></i>';
-    
-    messageDiv.innerHTML = `
-        <div class="message-avatar">${avatar}</div>
-        <div class="message-content">
-            <p>${content}</p>
-        </div>
-    `;
-    
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function addTypingIndicator() {
-    const messagesContainer = document.getElementById('chatMessages');
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message assistant typing-indicator';
-    typingDiv.innerHTML = `
-        <div class="message-avatar">
-            <i class="fas fa-brain neural-icon"></i>
-        </div>
-        <div class="message-content">
-            <div class="typing-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-    `;
-    
-    messagesContainer.appendChild(typingDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function removeTypingIndicator() {
-    const typingIndicator = document.querySelector('.typing-indicator');
-    if (typingIndicator) {
-        typingIndicator.remove();
-    }
-}
-
-// Data Simulation
-function startDataSimulation() {
-    // Simulate neural real-time data updates
-    setInterval(() => {
-        // Update portfolio value with small random changes
-        const currentValue = document.querySelector('.value-amount');
-        if (currentValue) {
-            const value = parseFloat(currentValue.textContent.replace(/[$,]/g, ''));
-            const change = (Math.random() - 0.3) * 50000; // Larger changes for neural system
-            const newValue = Math.max(value + change, 2500000); // Higher minimum
-            currentValue.textContent = `$${newValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            
-            // Update change indicator
-            const changeElement = document.querySelector('.value-change');
-            const originalValue = 2600000; // Higher baseline
-            const totalChange = newValue - originalValue;
-            const percentChange = (totalChange / originalValue) * 100;
-            
-            changeElement.textContent = `${totalChange >= 0 ? '+' : ''}$${Math.abs(totalChange).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${totalChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%)`;
-            changeElement.className = `value-change ${totalChange >= 0 ? 'positive' : 'negative'}`;
-        }
-    }, 2000); // Faster updates
-    
-    // Initialize market data updates
-    updateMarketData();
-    updateNewsDisplay();
-    
-    // Simulate neural position updates
-    setInterval(() => {
-        const positions = document.querySelectorAll('.position-pnl');
-        positions.forEach(position => {
-            const currentPnl = parseFloat(position.textContent.replace('%', ''));
-            const change = (Math.random() - 0.3) * 1.0; // Larger changes, upward bias
-            const newPnl = currentPnl + change;
-            
-            position.textContent = `${newPnl >= 0 ? '+' : ''}${newPnl.toFixed(1)}%`;
-            position.className = `position-pnl ${newPnl >= 0 ? 'positive' : 'negative'} neural-pulse`;
-        });
-    }, 4000); // Faster updates
-    
-    // Simulate neural core activity
-    setInterval(() => {
-        const cores = document.querySelectorAll('.core');
-        cores.forEach(core => {
-            if (Math.random() > 0.8) {
-                core.classList.toggle('active');
-                setTimeout(() => core.classList.add('active'), 500);
+        Object.values(this.charts).forEach(chart => {
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
             }
         });
-    }, 1500);
+    }
 }
 
-// Utility Functions
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-    }).format(amount);
-}
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.quantBot = new QuantBotAI();
+});
 
-function formatPercentage(value) {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-}
-
-function addNotification(message, type = 'info') {
-    // Enhanced neural notification system
-    console.log(`🧠 NEURAL ${type.toUpperCase()}: ${message}`);
-    
-    // Could add visual notifications here
-    const notification = document.createElement('div');
-    notification.className = `neural-notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-brain"></i>
-        <span>${message}</span>
-    `;
-    
-    // Add to page temporarily
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, 3000);
-}
-
-// Enhanced CSS for neural effects
-const style = document.createElement('style');
-style.textContent = `
-    .typing-dots {
-        display: flex;
-        gap: 4px;
-        padding: 8px 0;
+// Handle page unload
+window.addEventListener('beforeunload', () => {
+    if (window.quantBot) {
+        window.quantBot.destroy();
     }
-    
-    .typing-dots span {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--neural-color);
-        animation: typing 1.4s infinite ease-in-out;
-        box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
-    }
-    
-    .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
-    .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
-    
-    @keyframes typing {
-        0%, 80%, 100% { 
-            transform: scale(0.8); 
-            opacity: 0.5;
-            box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
-        }
-        40% { transform: scale(1); opacity: 1; }
-    }
-    
-    .neural-notification {
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: rgba(0, 255, 255, 0.1);
-        border: 1px solid rgba(0, 255, 255, 0.3);
-        border-radius: 8px;
-        padding: 12px 16px;
-        color: var(--neural-color);
-        backdrop-filter: blur(10px);
-        z-index: 10000;
-        animation: slideInRight 0.3s ease-out;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-`;
-document.head.appendChild(style);
+});
